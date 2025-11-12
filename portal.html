@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Portal Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use Inter font and simple theming -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#4f46e5', // Indigo-600
+                        'secondary': '#10b981', // Emerald-500
+                        'background': '#f9fafb', // Gray-50
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background-color: #d1d5db; /* Gray-300 */
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
+
+    <!-- Firebase SDK Imports (Module setup) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        let currentUserId = null;
+        let isAuthReady = false;
+
+        // Initialize Firebase and Authentication
+        async function initializeFirebase() {
+            try {
+                // Check if config is present before initializing
+                if (Object.keys(firebaseConfig).length === 0) {
+                     console.warn("Firebase config is missing. The application will run without persistence.");
+                     document.getElementById('auth-status').textContent = '⚠️ Not connected to persistence layer';
+                     isAuthReady = true;
+                     return;
+                }
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Sign in with custom token or anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                    console.log("Signed in with custom token.");
+                } else {
+                    await signInAnonymously(auth);
+                    console.log("Signed in anonymously.");
+                }
+
+                // Listen for Auth State Changes
+                onAuthStateChanged(auth, (user) => {
+                    isAuthReady = true;
+                    if (user) {
+                        currentUserId = user.uid;
+                        document.getElementById('auth-status').textContent = `User ID: ${currentUserId}`;
+                        document.getElementById('user-welcome').textContent = `Welcome, Student ${currentUserId.substring(0, 8)}...`;
+                        console.log("Authentication complete. User ID:", currentUserId);
+                        // Start data listeners after auth is ready
+                        setupDataListeners();
+                    } else {
+                        currentUserId = null;
+                        document.getElementById('auth-status').textContent = 'Signed out or anonymous.';
+                        document.getElementById('user-welcome').textContent = 'Welcome, Guest';
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                document.getElementById('auth-status').textContent = '❌ Initialization Failed';
+                isAuthReady = true; // Still set to true to prevent blocking
+            }
+        }
+
+        // --- FIREBASE DATA FUNCTIONS ---
+        // Function to create path for private user data
+        function getUserDataPath(collectionName) {
+            if (!currentUserId || !appId) return null;
+            return `artifacts/${appId}/users/${currentUserId}/${collectionName}`;
+        }
+
+        // Function to fetch and listen to real-time data (e.g., assignments)
+        function setupDataListeners() {
+            const assignmentsRefPath = getUserDataPath('assignments');
+            if (!assignmentsRefPath) return;
+
+            const q = query(collection(db, assignmentsRefPath));
+
+            onSnapshot(q, (snapshot) => {
+                const assignments = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    assignments.push({ id: doc.id, ...data });
+                });
+                renderAssignments(assignments);
+            }, (error) => {
+                console.error("Error fetching assignments:", error);
+                document.getElementById('assignments-list').innerHTML = '<p class="text-red-500">Failed to load data.</p>';
+            });
+
+            // Initial mock data loading
+            loadMockData();
+        }
+
+        async function loadMockData() {
+            const assignmentsRefPath = getUserDataPath('assignments');
+            if (!assignmentsRefPath) return;
+
+            // Check if collection is empty, if so, add initial mock data
+            const assignmentsCollectionRef = collection(db, assignmentsRefPath);
+            const snapshot = await getDocs(assignmentsCollectionRef);
+
+            if (snapshot.empty) {
+                console.log("Adding initial mock data...");
+                const mockAssignments = [
+                    { title: "Math Homework 3.1", dueDate: "2025-11-15", status: "Pending", priority: "High" },
+                    { title: "History Essay Draft", dueDate: "2025-11-20", status: "Completed", priority: "Medium" },
+                    { title: "Science Lab Report", dueDate: "2025-11-25", status: "Pending", priority: "High" },
+                ];
+
+                for (const assignment of mockAssignments) {
+                    await addDoc(assignmentsCollectionRef, assignment);
+                }
+            }
+        }
+
+
+        // --- UI RENDER FUNCTIONS ---
+        // Converts the date string to a friendly format
+        function formatDueDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Renders the list of assignments
+        function renderAssignments(assignments) {
+            const listContainer = document.getElementById('assignments-list');
+            listContainer.innerHTML = ''; // Clear existing list
+
+            // Sort by due date (closest first)
+            assignments.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
+            if (assignments.length === 0) {
+                listContainer.innerHTML = '<p class="text-gray-500 text-center py-4">No assignments yet! Time to relax.</p>';
+                return;
+            }
+
+            assignments.forEach(item => {
+                const isCompleted = item.status === 'Completed';
+                const priorityColor = item.priority === 'High' ? 'bg-red-500' : (item.priority === 'Medium' ? 'bg-yellow-500' : 'bg-green-500');
+
+                const itemHtml = `
+                    <div class="flex items-center justify-between p-4 bg-white border-b border-gray-100 last:border-b-0 ${isCompleted ? 'opacity-60' : ''}">
+                        <div class="flex items-center space-x-4">
+                            <!-- Status Indicator / Completion Checkbox (Mock) -->
+                            <div class="h-4 w-4 rounded-full ${isCompleted ? 'bg-secondary' : 'bg-gray-300'} flex-shrink-0"></div>
+
+                            <div>
+                                <p class="text-gray-900 font-medium ${isCompleted ? 'line-through' : ''}">${item.title}</p>
+                                <p class="text-sm text-gray-500">${item.status}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 flex-shrink-0">
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full text-white ${priorityColor}">
+                                ${item.priority}
+                            </span>
+                            <span class="text-sm font-semibold text-primary">
+                                Due ${formatDueDate(item.dueDate)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+                listContainer.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        }
+
+
+        // Global setup call
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+
+        // Export a global function for mock action button
+        window.handleMockAction = (action) => {
+            const modal = document.getElementById('mock-modal');
+            document.getElementById('modal-message').textContent = `Action "${action}" triggered successfully! (A real portal would do something here)`;
+            modal.classList.remove('hidden');
+        }
+
+        window.closeModal = () => {
+            document.getElementById('mock-modal').classList.add('hidden');
+        }
+
+        // Example mock schedule data for the UI
+        window.scheduleData = [
+            { time: "9:00 AM", course: "Algebra II", room: "M-201" },
+            { time: "10:30 AM", course: "World History", room: "H-105" },
+            { time: "12:00 PM", course: "Lunch Break", room: "Cafeteria" },
+            { time: "1:00 PM", course: "English Literature", room: "L-302" },
+            { time: "2:30 PM", course: "Chemistry Lab", room: "S-110" },
+        ];
+
+        // Render the schedule once the DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const scheduleContainer = document.getElementById('daily-schedule');
+            window.scheduleData.forEach(item => {
+                const itemHtml = `
+                    <div class="flex justify-between items-center p-3 border-b border-gray-100 last:border-b-0">
+                        <div class="font-medium text-gray-900">${item.time}</div>
+                        <div class="text-sm text-primary font-semibold">${item.course}</div>
+                        <div class="text-sm text-gray-500">${item.room}</div>
+                    </div>
+                `;
+                scheduleContainer.insertAdjacentHTML('beforeend', itemHtml);
+            });
+        });
+
+    </script>
+
+
+    <!-- --- MAIN APPLICATION LAYOUT --- -->
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- Header and User Info -->
+        <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-6 rounded-xl shadow-lg mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Student Dashboard</h1>
+                <p id="user-welcome" class="text-xl text-primary mt-1">Welcome, Student...</p>
+            </div>
+            <div class="mt-4 sm:mt-0 text-right">
+                <p id="auth-status" class="text-sm text-gray-500">Connecting...</p>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="handleMockAction('Settings')" class="text-sm px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-indigo-700 transition duration-150">
+                        Settings
+                    </button>
+                    <button onclick="handleMockAction('Logout')" class="text-sm px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition duration-150">
+                        Logout
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Assignments / To-Do List (Full Width on Mobile, 2/3 on Desktop) -->
+            <section class="lg:col-span-2 bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <h2 class="text-2xl font-semibold text-gray-800">Assignments & Deadlines</h2>
+                    <button onclick="handleMockAction('New Assignment')" class="text-sm px-4 py-2 bg-secondary text-white rounded-lg shadow-md hover:bg-emerald-600 transition duration-150">
+                        + Add Task
+                    </button>
+                </div>
+                <!-- Assignment List Area - Populated by Firebase/JS -->
+                <div id="assignments-list" class="divide-y divide-gray-100 custom-scroll max-h-96 overflow-y-auto">
+                    <!-- Dynamic assignments will be inserted here -->
+                    <p class="text-center text-gray-400 py-10">Loading assignments...</p>
+                </div>
+            </section>
+
+            <!-- Daily Schedule (Full Width on Mobile, 1/3 on Desktop) -->
+            <section class="lg:col-span-1 bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-2xl font-semibold text-gray-800">Today's Schedule</h2>
+                    <p class="text-sm text-gray-500 mt-1">Tuesday, Nov 12</p>
+                </div>
+                <div id="daily-schedule" class="divide-y divide-gray-100 custom-scroll max-h-96 overflow-y-auto">
+                    <!-- Schedule items will be inserted here by JS -->
+                    <p class="text-center text-gray-400 py-4">Preparing schedule...</p>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Resources Section -->
+        <section class="mt-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Quick Resources</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <button onclick="handleMockAction('View Grades')" class="p-4 bg-primary text-white rounded-xl shadow-md flex flex-col items-center hover:bg-indigo-700 transition duration-150">
+                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002-2h-4a2 2 0 002 2z"></path></svg>
+                    <span class="text-sm font-medium">View Grades</span>
+                </button>
+                <button onclick="handleMockAction('Email Teacher')" class="p-4 bg-secondary text-white rounded-xl shadow-md flex flex-col items-center hover:bg-emerald-600 transition duration-150">
+                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    <span class="text-sm font-medium">Email Teacher</span>
+                </button>
+                <button onclick="handleMockAction('Library')" class="p-4 bg-indigo-500 text-white rounded-xl shadow-md flex flex-col items-center hover:bg-indigo-600 transition duration-150">
+                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18s-3.332.477-4.5 1.253"></path></svg>
+                    <span class="text-sm font-medium">Library</span>
+                </button>
+                <button onclick="handleMockAction('Transcript')" class="p-4 bg-emerald-500 text-white rounded-xl shadow-md flex flex-col items-center hover:bg-emerald-600 transition duration-150">
+                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="text-sm font-medium">Transcript</span>
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Mock Modal (Replaces alert() for notifications) -->
+    <div id="mock-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative bg-white p-6 rounded-xl shadow-2xl w-96 max-w-sm mx-auto">
+            <h3 class="text-xl font-bold mb-3 text-primary">Notification</h3>
+            <p id="modal-message" class="text-gray-700 mb-4"></p>
+            <button onclick="closeModal()" class="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-indigo-700 transition duration-150">
+                Got It
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>
