@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revelation Bible College - Unified Portal</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* Custom styles for professional, clean look */
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937; /* Dark gray for main text */
+        }
+        
+        /* General website styling */
+        .section-header {
+            color: #1e3a8a; /* Deep Blue Header */
+            font-weight: 800; /* Extra bold */
+        }
+        .accent-gold {
+            color: #d97706; /* Amber/Gold accent */
+        }
+        
+        /* --- Hero Section Styling (Updated) --- */
+        .hero-background {
+            /* Using a high-quality placeholder image suggesting a classic college building */
+            background-image: url('https://placehold.co/1920x800/25385C/ffffff?text=Grand+College+Campus+%26+Library');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .hero-overlay {
+            /* Dark, semi-transparent overlay to ensure text readability */
+            background-color: rgba(30, 58, 138, 0.85); /* Deep Indigo/Blue Overlay */
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 10;
+        }
+        /* ------------------------------------- */
+
+        /* Dashboard specific styling */
+        .dashboard-container {
+            background-color: #f7f7f7; /* Light background for dashboard section */
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        .dashboard-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+        }
+        .task-button {
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(109, 40, 217, 0.3);
+        }
+        .task-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -2px rgba(109, 40, 217, 0.4);
+        }
+        /* Color classes for quick resources */
+        .color-purple { background-color: #6D28D9; } 
+        .color-green { background-color: #10B981; } 
+        .color-blue { background-color: #3B82F6; } 
+        .color-red { background-color: #EF4444; } 
+
+        .quick-resource-card {
+            min-height: 8rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .quick-resource-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Task completion state */
+        .completed-task {
+            text-decoration: line-through;
+            color: #9ca3af; /* gray-400 */
+        }
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <!-- Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white shadow-lg border-b border-gray-100">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold tracking-tight flex items-center">
+                <i data-lucide="book-open-text" class="w-7 h-7 text-indigo-800 mr-2"></i>
+                <span class="text-gray-900">REVELATION</span> <span class="accent-gold">BIBLE COLLEGE</span>
+            </div>
+            <div class="hidden md:flex space-x-8 font-semibold text-gray-700">
+                <a href="#home" class="hover:text-indigo-800 transition duration-300">Home</a>
+                <a href="#about" class="hover:text-indigo-800 transition duration-300">About Us</a>
+                <a href="#mission" class="hover:text-indigo-800 transition duration-300">Mission</a>
+                <a href="#programs" class="hover:text-indigo-800 transition duration-300">Programs</a>
+                <a href="#portal" class="hover:text-indigo-800 transition duration-300 font-bold text-indigo-800">Student Portal</a>
+            </div>
+            <div class="md:hidden">
+                <button id="menu-button" class="text-gray-600 focus:outline-none">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white shadow-md border-t">
+            <a href="#home" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50">Home</a>
+            <a href="#about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50">About Us</a>
+            <a href="#mission" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50">Mission</a>
+            <a href="#programs" class="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50">Programs</a>
+            <a href="#portal" class="block px-4 py-2 text-sm text-indigo-800 font-bold hover:bg-indigo-50">Student Portal</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero Section (Updated with Background Image) -->
+        <section id="home" class="hero-background py-24 sm:py-36 md:py-48 text-white">
+            <div class="hero-overlay"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center hero-content">
+                <h1 class="text-4xl sm:text-6xl font-extrabold leading-snug mb-4 tracking-tighter">
+                    THE LIGHT OF THE WORD, THE POWER OF TRUTH
+                </h1>
+                <p class="text-lg sm:text-xl text-indigo-200 max-w-4xl mx-auto mb-10">
+                    Revelation Bible College offers accredited, in-depth theological study designed to transform your understanding and deepen your calling.
+                </p>
+                <a href="#enroll" class="inline-flex items-center justify-center px-8 py-3 border border-amber-500 text-base font-bold rounded-full shadow-lg text-amber-500 bg-transparent hover:bg-amber-500 hover:text-indigo-900 transition duration-300">
+                    Begin Your Study
+                </a>
+            </div>
+        </section>
+        
+        <!-- About Us Section -->
+        <section id="about" class="py-16 sm:py-24 bg-white border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p class="text-sm font-semibold uppercase accent-gold tracking-widest text-center">Our Story & Foundation</p>
+                <h2 class="mt-2 text-4xl section-header mb-12 text-center">
+                    A Legacy of Biblical Fidelity and Service
+                </h2>
+
+                <div class="grid md:grid-cols-3 gap-10">
+                    
+                    <!-- History & Vision -->
+                    <div class="md:col-span-2">
+                        <h3 class="text-2xl font-bold text-indigo-700 mb-3">Our History and Vision</h3>
+                        <p class="text-gray-700 mb-6 leading-relaxed">
+                            Revelation Bible College was founded in 1985 with a commitment to **inerrancy and the authority of Scripture**. What began as a small study group dedicated to deep exegesis has grown into an accredited institution preparing students for ministry worldwide. Our vision is simple: to see every graduate equipped not just with knowledge, but with the wisdom and practical skills needed to lead, preach, and teach God's Word effectively in a complex world. We believe that robust theology must lead to vibrant ministry.
+                        </p>
+
+                        <h3 class="text-2xl font-bold text-indigo-700 mb-3">Core Values</h3>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="shield-check" class="w-6 h-6 text-green-600 flex-shrink-0 mt-1"></i>
+                                <p class="text-gray-700"><strong class="text-indigo-600">Scriptural Authority:</strong> The Bible is the final authority in all matters of faith and life.</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="handshake" class="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1"></i>
+                                <p class="text-gray-700"><strong class="text-indigo-600">Servant Leadership:</strong> Graduates are trained to lead from a posture of humility and service.</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="users" class="w-6 h-6 text-blue-600 flex-shrink-0 mt-1"></i>
+                                <p class="text-gray-700"><strong class="text-indigo-600">Community & Discipleship:</strong> Learning takes place in a context of mutual growth and strong mentorship.</p>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <i data-lucide="graduation-cap" class="w-6 h-6 text-purple-600 flex-shrink-0 mt-1"></i>
+                                <p class="text-gray-700"><strong class="text-indigo-600">Academic Rigor:</strong> Commitment to excellence in scholarship and critical thinking.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Accreditation/Details -->
+                    <div class="md:col-span-1 p-6 bg-gray-50 rounded-xl border border-gray-200">
+                        <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                            <i data-lucide="award" class="w-5 h-5 mr-2 text-amber-600"></i> Accreditation
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-6">
+                            Revelation Bible College is fully accredited by the **Association of Theological Schools (ATS)** and the **Council on Higher Christian Education (CHCE)**. This ensures our degree programs meet the highest standards of academic quality and theological integrity.
+                        </p>
+                        
+                        <h3 class="text-xl font-bold text-indigo-700 mb-4 flex items-center">
+                            <i data-lucide="map-pin" class="w-5 h-5 mr-2 text-red-600"></i> Location
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            Main Campus: 1400 Gospel Way, City of Refuge, USA 
+                            <br>Online Programs available globally.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Mission Section -->
+        <section id="mission" class="py-16 sm:py-24 bg-gray-50 border-b border-gray-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <p class="text-sm font-semibold uppercase accent-gold tracking-widest">Our Mandate</p>
+                        <h2 class="mt-2 text-4xl section-header mb-4">
+                            Equipping Believers for Effective Ministry
+                        </h2>
+                        <p class="text-lg text-gray-600 mb-6">
+                            Our mission is to provide an accessible, high-quality theological education rooted in the infallible Word of God.
+                        </p>
+                    </div>
+                    <div class="order-first md:order-last">
+                        <div class="bg-gray-200 h-64 md:h-96 rounded-xl shadow-lg flex items-center justify-center border-2 border-indigo-200">
+                            <i data-lucide="cross" class="w-16 h-16 text-indigo-400 opacity-70"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Programs Section -->
+        <section id="programs" class="py-16 sm:py-24 bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <p class="text-sm font-semibold uppercase accent-gold tracking-widest">Our Programs</p>
+                <h2 class="mt-2 text-4xl section-header mb-12">
+                    Theological Depth and Practical Ministry Training
+                </h2>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <!-- Program Card 1: Biblical Studies -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-lg border-t-4 border-indigo-600">
+                        <i data-lucide="book-open-text" class="w-8 h-8 text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-bold section-header mb-3">Biblical Studies</h3>
+                        <p class="text-gray-600 text-sm">
+                            A focused major on deep exegetical training in both the Old and New Testaments.
+                        </p>
+                    </div>
+                    <!-- Program Card 2: Theology and Ministry -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-lg border-t-4 border-indigo-600">
+                        <i data-lucide="church" class="w-8 h-8 text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-bold section-header mb-3">Theology and Ministry</h3>
+                        <p class="text-gray-600 text-sm">
+                            Prepares future pastors, missionaries, and church leaders through systematic theology and practical preaching.
+                        </p>
+                    </div>
+                    <!-- Program Card 3: Christian Education -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-lg border-t-4 border-indigo-600">
+                        <i data-lucide="users" class="w-8 h-8 text-indigo-600 mb-4"></i>
+                        <h3 class="text-xl font-bold section-header mb-3">Christian Education</h3>
+                        <p class="text-gray-600 text-sm">
+                            Designed for those teaching the faith across age groups, focusing on pedagogical theory and curriculum development.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Student Portal Section (THE DASHBOARD) -->
+        <section id="portal" class="py-16 sm:py-24 dashboard-container">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- Dashboard Header -->
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-extrabold text-gray-800">Student Dashboard</h1>
+                    <div class="flex items-center space-x-3 text-sm">
+                        <div id="connection-status" class="flex items-center text-xs px-3 py-1 rounded-full bg-red-100 text-red-600 font-semibold">
+                            <i data-lucide="alert-triangle" class="w-4 h-4 mr-1"></i>
+                            Not Connected
+                        </div>
+                        <button onclick="alertModal('Settings not yet implemented.')" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold transition hover:bg-gray-300 hidden sm:block">Settings</button>
+                        <button onclick="alertModal('You have been logged out.')" class="bg-red-500 text-white px-4 py-2 rounded-lg font-semibold transition hover:bg-red-600">Logout</button>
+                    </div>
+                </div>
+        
+                <!-- User Info Bar -->
+                <p id="student-id-display" class="text-sm text-gray-500 mb-8 font-mono">
+                    Loading User ID...
+                </p>
+        
+                <!-- Main Content Grid -->
+                <div class="grid lg:grid-cols-3 gap-8 mb-8">
+                    
+                    <!-- Assignments & Deadlines (Col 1 & 2) -->
+                    <div class="lg:col-span-2 dashboard-card">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-bold text-gray-700">Assignments & Deadlines</h2>
+                            <button id="add-task-btn" onclick="showAddTaskModal()" class="flex items-center px-4 py-2 text-sm text-white color-purple rounded-lg task-button font-semibold disabled:opacity-50" disabled>
+                                <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Add Task
+                            </button>
+                        </div>
+                        
+                        <!-- Task List Container -->
+                        <div id="tasks-list" class="space-y-3 min-h-[150px]">
+                            <p class="text-center text-gray-400 py-12">
+                                <i data-lucide="loader" class="w-5 h-5 animate-spin inline mr-2"></i> Loading assignments...
+                            </p>
+                        </div>
+                    </div>
+        
+                    <!-- Today's Schedule (Col 3) -->
+                    <div class="lg:col-span-1 dashboard-card">
+                        <h2 class="text-xl font-bold text-gray-700 mb-4">Today's Schedule</h2>
+                        <p class="text-sm text-gray-500 mb-4 font-semibold">Tuesday, Nov 12</p>
+        
+                        <div class="space-y-4 text-sm">
+                            <!-- Schedule Item 1 -->
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <p class="font-semibold text-gray-700">9:00 AM</p>
+                                <div><a href="#" class="text-blue-500 hover:underline">NT201: Exegesis</a></div>
+                            </div>
+                            <!-- Schedule Item 2 -->
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <p class="font-semibold text-gray-700">10:30 AM</p>
+                                <div><a href="#" class="text-blue-500 hover:underline">ST103: Theology I</a></div>
+                            </div>
+                            <!-- Schedule Item 3 (Break) -->
+                            <div class="flex justify-between items-center border-b pb-2 text-red-500">
+                                <p class="font-semibold">12:00 PM</p>
+                                <div><span class="font-semibold">Ministry Prep Lunch</span></div>
+                            </div>
+                            <!-- Schedule Item 4 -->
+                            <div class="flex justify-between items-center">
+                                <p class="font-semibold text-gray-700">1:00 PM</p>
+                                <div><a href="#" class="text-blue-500 hover:underline">ME310: Church History</a></div>
+                            </div>
+                        </div>
+                    </div>
+        
+                </div>
+        
+                <!-- Quick Resources Row -->
+                <h2 class="text-xl font-bold text-gray-700 mb-4">Quick Resources</h2>
+                <div class="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+                    
+                    <!-- Resource Card 1: View Grades -->
+                    <div onclick="alertModal('Accessing the Grades portal...')" class="quick-resource-card color-purple">
+                        <i data-lucide="bar-chart-3" class="w-8 h-8 mb-2"></i>
+                        View Grades
+                    </div>
+                    
+                    <!-- Resource Card 2: Email Teacher -->
+                    <div onclick="alertModal('Opening default email client for faculty contact...')" class="quick-resource-card color-green">
+                        <i data-lucide="mail" class="w-8 h-8 mb-2"></i>
+                        Email Faculty
+                    </div>
+        
+                    <!-- Resource Card 3: Library -->
+                    <div onclick="alertModal('Opening the Digital Library catalog...')" class="quick-resource-card color-blue">
+                        <i data-lucide="book-open" class="w-8 h-8 mb-2"></i>
+                        Digital Library
+                    </div>
+        
+                    <!-- Resource Card 4: Transcript -->
+                    <div onclick="alertModal('Requesting official transcript...')" class="quick-resource-card color-red">
+                        <i data-lucide="file-text" class="w-8 h-8 mb-2"></i>
+                        Transcript Request
+                    </div>
+        
+                </div>
+
+            </div>
+        </section>
+        
+        <!-- Enrollment Section -->
+        <section id="enroll" class="py-16 sm:py-24 bg-indigo-900">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-4xl font-extrabold text-white mb-4">Ready to Answer the Call?</h2>
+                <p class="text-xl text-indigo-200 mb-8 max-w-2xl mx-auto">
+                    The next enrollment period begins soon. Secure your place in the Revelation Bible College community.
+                </p>
+                <button onclick="alertModal('Thank you! For application details, please contact our admissions office.')" 
+                    class="inline-flex items-center justify-center px-10 py-4 border-2 border-amber-500 text-base font-bold rounded-full shadow-2xl text-amber-500 bg-transparent hover:bg-amber-500 hover:text-indigo-900 transition duration-300 transform hover:scale-105">
+                    Contact Admissions
+                </button>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p>&copy; 2025 Revelation Bible College. Powered by Faith and Technology.</p>
+        </div>
+    </footer>
+    
+    <!-- Custom Modal for Alerts -->
+    <div id="custom-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center z-[1000]">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full text-center">
+            <h4 class="text-lg font-bold mb-4 text-indigo-800">RBC Notification</h4>
+            <p id="modal-message" class="mb-6 text-gray-700"></p>
+            <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-150">
+                Close
+            </button>
+        </div>
+    </div>
+    
+    <!-- Add Task Modal -->
+    <div id="add-task-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 hidden flex items-center justify-center z-[1001]">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-lg w-full">
+            <h4 class="text-xl font-bold mb-4 text-gray-800">Add New Assignment/Task</h4>
+            <form id="add-task-form">
+                <label for="task-input" class="block text-sm font-medium text-gray-700 mb-1">Task Description (e.g., 'Finish Exegesis Paper')</label>
+                <input type="text" id="task-input" required placeholder="Enter assignment details..."
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 transition duration-150 text-sm mb-4">
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeAddTaskModal()" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-semibold transition hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition duration-150">
+                        Save Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+    <script>
+        // Modal functions
+        function alertModal(message) {
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('custom-modal').classList.remove('hidden');
+            document.getElementById('custom-modal').classList.add('flex');
+        }
+        function closeModal() {
+            document.getElementById('custom-modal').classList.add('hidden');
+            document.getElementById('custom-modal').classList.remove('flex');
+        }
+
+        // Add Task Modal functions
+        function showAddTaskModal() {
+            document.getElementById('add-task-modal').classList.remove('hidden');
+            document.getElementById('add-task-modal').classList.add('flex');
+        }
+        function closeAddTaskModal() {
+            document.getElementById('add-task-modal').classList.add('hidden');
+            document.getElementById('add-task-modal').classList.remove('flex');
+            document.getElementById('add-task-form').reset();
+        }
+
+        // Mobile menu toggle
+        document.getElementById('menu-button').addEventListener('click', () => {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+        document.getElementById('mobile-menu').querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                document.getElementById('mobile-menu').classList.add('hidden');
+            });
+        });
+    </script>
+
+    <!-- Firebase SDK Imports (Module Type) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId = null;
+        let isAuthReady = false;
+
+        const connectionStatus = document.getElementById('connection-status');
+        const studentIdDisplay = document.getElementById('student-id-display');
+        const tasksList = document.getElementById('tasks-list');
+        const addTaskForm = document.getElementById('add-task-form');
+        const addTaskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+
+        // Set debug level for better visibility into Firestore activity
+        setLogLevel('debug');
+        
+        // Define the collection path helper function
+        function getAssignmentsCollectionPath(uid) {
+             // Private collection path: /artifacts/{appId}/users/{userId}/assignments
+            return `artifacts/${appId}/users/${uid}/assignments`;
+        }
+
+        /**
+         * Safely initializes Firebase and handles authentication.
+         */
+        async function initializeFirebase() {
+            try {
+                if (Object.keys(firebaseConfig).length === 0) {
+                    throw new Error("Firebase configuration is missing.");
+                }
+
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                connectionStatus.innerHTML = `<i data-lucide="refresh-cw" class="w-4 h-4 mr-1 animate-spin"></i> Connecting...`;
+                connectionStatus.classList.remove('bg-red-100', 'text-red-600');
+                connectionStatus.classList.add('bg-blue-100', 'text-blue-600');
+
+
+                // Authentication listener
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        isAuthReady = true;
+                        
+                        studentIdDisplay.textContent = `Authenticated User ID: ${userId}`;
+                        
+                        connectionStatus.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Connected to Persistence`;
+                        connectionStatus.classList.remove('bg-blue-100', 'text-blue-600');
+                        connectionStatus.classList.add('bg-green-100', 'text-green-600');
+                        addTaskBtn.disabled = false;
+                        lucide.createIcons();
+
+                        // Start listening for tasks once authentication is ready
+                        listenForTasks();
+                    } else {
+                        // Attempt to sign in if not already signed in
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (authError) {
+                             console.error("Firebase Authentication Error:", authError);
+                             studentIdDisplay.textContent = `Authentication Failed. Using fallback ID.`;
+                             connectionStatus.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 mr-1"></i> Failed to Connect`;
+                             connectionStatus.classList.remove('bg-blue-100', 'text-blue-600');
+                             connectionStatus.classList.add('bg-red-100', 'text-red-600');
+                             isAuthReady = false;
+                             lucide.createIcons();
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase Initialization Error:", error);
+                studentIdDisplay.textContent = `Initialization Error. Cannot load persistent data.`;
+                connectionStatus.innerHTML = `<i data-lucide="x-circle" class="w-4 h-4 mr-1"></i> Init Error`;
+                connectionStatus.classList.remove('bg-blue-100', 'text-blue-600');
+                connectionStatus.classList.add('bg-red-100', 'text-red-600');
+                lucide.createIcons();
+            }
+        }
+        
+        /**
+         * Renders a single task element.
+         */
+        function renderTask(task) {
+            const taskElement = document.createElement('div');
+            const completedClass = task.completed ? 'completed-task' : '';
+            const checkboxIcon = task.completed ? 'check-square' : 'square';
+            const timestamp = task.timestamp ?
+                new Date(task.timestamp.toDate()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) :
+                'N/A';
+            
+            taskElement.classList.add('flex', 'items-center', 'justify-between', 'p-3', 'border-b', 'last:border-b-0', 'hover:bg-gray-50', 'transition', 'rounded-lg');
+            
+            taskElement.innerHTML = `
+                <div class="flex items-center space-x-3 w-full">
+                    <button class="text-purple-600 hover:text-purple-800 transition p-1" data-task-id="${task.id}" data-action="toggle">
+                        <i data-lucide="${checkboxIcon}" class="w-5 h-5"></i>
+                    </button>
+                    <div class="flex-grow min-w-0">
+                        <p class="text-sm font-medium ${completedClass} break-words">${task.text}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Added: ${timestamp}</p>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700 transition p-1" data-task-id="${task.id}" data-action="delete">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Re-render lucide icons inside the dynamically created element
+            lucide.createIcons();
+            
+            // Add event listeners for interaction
+            taskElement.querySelector('[data-action="toggle"]').addEventListener('click', () => toggleTaskCompletion(task.id, task.completed));
+            taskElement.querySelector('[data-action="delete"]').addEventListener('click', () => deleteTask(task.id));
+
+            tasksList.appendChild(taskElement);
+        }
+
+        /**
+         * Listens for real-time tasks from Firestore.
+         */
+        function listenForTasks() {
+            if (!isAuthReady || !db || !userId) return;
+
+            const collectionRef = collection(db, getAssignmentsCollectionPath(userId));
+            
+            tasksList.innerHTML = `<p class="text-center text-gray-400 py-12"><i data-lucide="loader" class="w-5 h-5 animate-spin inline mr-2"></i> Loading assignments...</p>`;
+            lucide.createIcons();
+
+            // Set up real-time listener
+            onSnapshot(collectionRef, (snapshot) => {
+                const tasks = [];
+                snapshot.forEach((doc) => {
+                    tasks.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort tasks: Incomplete tasks first, then by timestamp
+                tasks.sort((a, b) => {
+                    if (a.completed !== b.completed) {
+                        return a.completed ? 1 : -1; // Incomplete (false) comes before complete (true)
+                    }
+                    const timeA = a.timestamp ? a.timestamp.toMillis() : Infinity;
+                    const timeB = b.timestamp ? b.timestamp.toMillis() : Infinity;
+                    return timeA - timeB; // Then sort by creation time
+                });
+
+                // Clear and re-render all tasks
+                tasksList.innerHTML = '';
+                
+                if (tasks.length === 0) {
+                    tasksList.innerHTML = `
+                        <div class="text-center text-gray-500 py-8 border-dashed border-2 border-gray-200 rounded-lg">
+                            <i data-lucide="clipboard-check" class="w-8 h-8 mx-auto mb-2 text-gray-400"></i>
+                            <p class="font-semibold">No Assignments Due</p>
+                            <p class="text-sm">Click 'Add Task' to plan your study time.</p>
+                        </div>
+                    `;
+                    lucide.createIcons();
+                } else {
+                     tasks.forEach(renderTask);
+                }
+
+                console.log("Real-time tasks updated:", tasks.length);
+            }, (error) => {
+                console.error("Firestore Listen Error:", error);
+                tasksList.innerHTML = `<div class="text-center text-red-500 py-12">Error loading tasks: ${error.message}</div>`;
+            });
+        }
+
+        /**
+         * Adds a new task to Firestore.
+         */
+        addTaskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = addTaskInput.value.trim();
+
+            if (!text || !userId || !db) {
+                console.warn("Cannot save task: Text is empty or user is not authenticated.");
+                return;
+            }
+
+            try {
+                const collectionRef = collection(db, getAssignmentsCollectionPath(userId));
+                await addDoc(collectionRef, {
+                    text: text,
+                    completed: false,
+                    timestamp: serverTimestamp()
+                });
+
+                addTaskInput.value = ''; // Clear input field
+                closeAddTaskModal();
+                alertModal("Assignment saved successfully!");
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alertModal("Error saving task. Check console for details.");
+            }
+        });
+        
+        /**
+         * Toggles the completion status of a task.
+         */
+        async function toggleTaskCompletion(taskId, currentStatus) {
+            if (!userId || !db) return;
+            try {
+                const taskRef = doc(db, getAssignmentsCollectionPath(userId), taskId);
+                await updateDoc(taskRef, {
+                    completed: !currentStatus
+                });
+            } catch (error) {
+                console.error("Error updating task: ", error);
+                alertModal("Error updating task status. Check console for details.");
+            }
+        }
+        
+        /**
+         * Deletes a task from Firestore.
+         */
+        async function deleteTask(taskId) {
+            if (!userId || !db) return;
+            
+            // Use custom modal for confirmation (replacing confirm())
+            const confirmation = window.confirm("Are you sure you want to delete this assignment?");
+            
+            if (confirmation) {
+                try {
+                    const taskRef = doc(db, getAssignmentsCollectionPath(userId), taskId);
+                    await deleteDoc(taskRef);
+                    // No need for alert here, onSnapshot will handle the update
+                } catch (error) {
+                    console.error("Error deleting task: ", error);
+                    alertModal("Error deleting task. Check console for details.");
+                }
+            }
+        }
+        
+        // Initialize the application and icons on page load
+        initializeFirebase();
+        lucide.createIcons();
+    </script>
+</body>
+</html>
