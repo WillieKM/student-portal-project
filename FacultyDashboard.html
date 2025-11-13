@@ -1,0 +1,411 @@
+<!--
+  FACULTY DASHBOARD - Self-Contained HTML/React/Firebase App
+  This file combines the React component, its dependencies (React, ReactDOM, Tailwind),
+  and the Firebase logic into a single HTML file for easy static deployment.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for aesthetic enhancements */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f7f9;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="root" class="min-h-screen">
+        <!-- React component will render here -->
+    </div>
+
+    <!-- Load Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        setLogLevel('Debug'); // Enable Firestore logging
+
+        // IMPORTANT: Global variables must be defined here for the React component to use them
+        // In a real Vercel environment, these would be read from environment variables.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rbc-portal-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app, db, auth;
+
+        if (Object.keys(firebaseConfig).length > 0) {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } else {
+            // Placeholder/local mode initialization logic
+            console.error("Firebase configuration is missing or empty.");
+        }
+
+        window.firebase = {
+            appId,
+            db,
+            auth,
+            initialAuthToken,
+            Timestamp,
+            signOut,
+            onAuthStateChanged,
+            collection,
+            addDoc,
+            query,
+            onSnapshot,
+            doc,
+            updateDoc,
+            deleteDoc
+        };
+
+        // Initialize Authentication and wait for the user state
+        window.initializeAuth = async () => {
+            if (auth) {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                        console.log("Signed in with custom token.");
+                    } else {
+                        await signInAnonymously(auth);
+                        console.log("Signed in anonymously.");
+                    }
+                } catch (error) {
+                    console.error("Authentication failed:", error);
+                }
+            } else {
+                 // Fallback for when Firebase is not configured
+                console.log("Firebase not initialized. Running in mock mode.");
+                return new Promise(resolve => setTimeout(resolve, 100)); // Short delay
+            }
+        };
+
+    </script>
+
+    <!-- Load React and ReactDOM CDNs -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Load Babel for JSX support in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- React Component Script (The heart of the application) -->
+    <script type="text/babel">
+        // Ensure React is loaded before this script runs
+        const { useState, useEffect, useRef } = React;
+        const { db, auth, appId, Timestamp, signOut, onAuthStateChanged, collection, addDoc, query, onSnapshot, doc, updateDoc, deleteDoc } = window.firebase;
+
+        // --- Utility Functions ---
+
+        // Function to handle retries for API calls (Firebase is local, but good practice)
+        const runWithRetry = async (fn, maxRetries = 3, delay = 1000) => {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    return await fn();
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    console.warn(`Attempt ${i + 1} failed. Retrying in ${delay}ms...`, error.message);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        };
+
+        // --- Component: Custom Message Modal (Replaces alert()) ---
+
+        function MessageModal({ message, title, onClose }) {
+            return (
+                <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-sm w-full">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
+                            <p className="text-gray-600 mb-6">{message}</p>
+                            <button
+                                onClick={onClose}
+                                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-150"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main Component: App (Faculty Dashboard) ---
+
+        const App = () => {
+            const [isAuthReady, setIsAuthReady] = useState(false);
+            const [userId, setUserId] = useState(null);
+            const [showModal, setShowModal] = useState(false);
+            const [modalContent, setModalContent] = useState({ title: '', message: '' });
+
+            const [title, setTitle] = useState('');
+            const [content, setContent] = useState('');
+            const [assignmentType, setAssignmentType] = useState('assignment');
+
+            const [assignments, setAssignments] = useState([]);
+            const isSubmitting = useRef(false);
+
+            // 1. Authentication and Initialization Effect
+            useEffect(() => {
+                if (!auth) {
+                    setIsAuthReady(true);
+                    return; // Skip Firebase setup if not available
+                }
+
+                // Run the auth initialization function defined in the script above
+                window.initializeAuth().then(() => {
+                    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            setUserId(user.uid);
+                        } else {
+                            setUserId(null);
+                        }
+                        setIsAuthReady(true);
+                    });
+                    return () => unsubscribeAuth();
+                });
+            }, []);
+
+            // 2. Data Fetching Effect (Real-time Listener)
+            useEffect(() => {
+                if (!isAuthReady || !db || !userId) return;
+
+                // Path: /artifacts/{appId}/public/data/assignments
+                const assignmentsCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'assignments');
+                const q = query(assignmentsCollectionRef);
+
+                const unsubscribeSnapshot = onSnapshot(q, (snapshot) => {
+                    const fetchedAssignments = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        timestamp: doc.data().timestamp?.toDate() // Convert Firestore Timestamp to JS Date
+                    }));
+
+                    // Sort by timestamp descending (newest first)
+                    fetchedAssignments.sort((a, b) => b.timestamp - a.timestamp);
+                    setAssignments(fetchedAssignments);
+                }, (error) => {
+                    console.error("Error fetching assignments:", error);
+                    showUserMessage("Fetch Error", "Failed to retrieve real-time assignments.");
+                });
+
+                return () => unsubscribeSnapshot();
+            }, [isAuthReady, userId, db, appId]);
+
+
+            // --- Handlers ---
+
+            const showUserMessage = (title, message) => {
+                setModalContent({ title, message });
+                setShowModal(true);
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (isSubmitting.current) return;
+
+                if (!title.trim() || !content.trim()) {
+                    showUserMessage("Validation Error", "Please provide both a title and content for the assignment.");
+                    return;
+                }
+                if (!userId) {
+                    showUserMessage("Authorization Error", "User not authenticated. Please ensure Firebase is set up.");
+                    return;
+                }
+
+                isSubmitting.current = true;
+                const newAssignment = {
+                    title: title.trim(),
+                    content: content.trim(),
+                    type: assignmentType,
+                    facultyId: userId,
+                    timestamp: Timestamp.now(),
+                    isPublished: true,
+                };
+
+                try {
+                    await runWithRetry(() => addDoc(
+                        collection(db, 'artifacts', appId, 'public', 'data', 'assignments'),
+                        newAssignment
+                    ));
+                    showUserMessage("Success", `New ${assignmentType} has been successfully published to the student portal.`);
+                    // Clear form
+                    setTitle('');
+                    setContent('');
+                } catch (error) {
+                    console.error("Error adding document:", error);
+                    showUserMessage("Submission Failed", "There was an error publishing the assignment. Please check the console for details.");
+                } finally {
+                    isSubmitting.current = false;
+                }
+            };
+
+            const handleDelete = async (id) => {
+                if (!window.confirm('Are you sure you want to delete this assignment?')) return;
+
+                try {
+                    await runWithRetry(() => deleteDoc(
+                        doc(db, 'artifacts', appId, 'public', 'data', 'assignments', id)
+                    ));
+                } catch (error) {
+                    console.error("Error deleting document:", error);
+                    showUserMessage("Deletion Failed", "There was an error deleting the assignment. Please check the console for details.");
+                }
+            };
+
+            // --- Render Logic ---
+
+            if (!isAuthReady) {
+                return (
+                    <div className="flex justify-center items-center min-h-screen text-xl text-gray-600">
+                        Loading Authentication...
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container mx-auto p-4 md:p-8">
+                    {showModal && (
+                        <MessageModal
+                            title={modalContent.title}
+                            message={modalContent.message}
+                            onClose={() => setShowModal(false)}
+                        />
+                    )}
+
+                    <header className="text-center py-6 bg-white rounded-xl mb-8 shadow-md">
+                        <h1 className="text-3xl md:text-4xl font-extrabold text-indigo-700">RBC Faculty Portal</h1>
+                        <p className="text-gray-500 mt-2">Publish Assignments and Announcements</p>
+                        <p className="text-xs mt-2 text-gray-400">Your ID: <span className="font-mono text-gray-600">{userId || "N/A"}</span></p>
+                        <a href="RoleSelector.html" className="mt-4 inline-block px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-150 text-sm font-medium">
+                            ← Switch Role
+                        </a>
+                    </header>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Assignment Submission Form (Col 1) */}
+                        <div className="lg:col-span-1 bg-white p-6 rounded-xl card h-fit">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-3">New Publication</h2>
+                            <form onSubmit={handleSubmit}>
+                                <div className="input-group">
+                                    <label htmlFor="assignmentType" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                                    <select
+                                        id="assignmentType"
+                                        value={assignmentType}
+                                        onChange={(e) => setAssignmentType(e.target.value)}
+                                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+                                    >
+                                        <option value="assignment">Assignment</option>
+                                        <option value="announcement">Announcement</option>
+                                        <option value="lesson">Lesson Plan</option>
+                                    </select>
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                    <input
+                                        type="text"
+                                        id="title"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        placeholder="E.g., Final Paper Prompt"
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    />
+                                </div>
+
+                                <div className="input-group">
+                                    <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Content/Instructions</label>
+                                    <textarea
+                                        id="content"
+                                        value={content}
+                                        onChange={(e) => setContent(e.target.value)}
+                                        rows="8"
+                                        placeholder="Provide detailed instructions or the body of the announcement here..."
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                                    ></textarea>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting.current}
+                                    className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition duration-150 disabled:bg-indigo-400"
+                                >
+                                    {isSubmitting.current ? 'Publishing...' : `Publish New ${assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)}`}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* Published Assignments List (Col 2 & 3) */}
+                        <div className="lg:col-span-2">
+                            <h2 className="text-2xl font-bold text-gray-800 mb-6">Published Items ({assignments.length})</h2>
+
+                            {assignments.length === 0 ? (
+                                <div className="bg-white p-6 rounded-xl text-center text-gray-500 card">
+                                    No publications found. Use the form to publish your first item.
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    {assignments.map((item) => (
+                                        <div key={item.id} className="bg-white p-6 rounded-xl card border-l-4 border-indigo-500">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full ${item.type === 'assignment' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                                    </span>
+                                                    <h3 className="text-xl font-bold text-gray-900 mt-1">{item.title}</h3>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDelete(item.id)}
+                                                    className="text-red-500 hover:text-red-700 p-2 rounded-full transition duration-150"
+                                                    title="Delete Publication"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <p className="text-gray-600 whitespace-pre-wrap mt-2 mb-3">{item.content}</p>
+                                            <p className="text-sm text-gray-400">
+                                                Published by: {item.facultyId.substring(0, 8)}... on {item.timestamp ? item.timestamp.toLocaleString() : 'N/A'}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Render the App ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = ReactDOM.createRoot(container);
+                root.render(<App />);
+            }
+        });
+    </script>
+</body>
+</html>
